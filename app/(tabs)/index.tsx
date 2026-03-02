@@ -1,61 +1,54 @@
-import { ScrollView, Text, View, ActivityIndicator } from "react-native";
+import { useEffect } from "react";
+import { useRouter } from "expo-router";
+import { useAuth } from "@/hooks/use-auth";
+import { ActivityIndicator, View, Text } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { useJogaJuntoAuth } from "@/hooks/use-joga-junto-auth";
-import { LoginForm } from "@/components/auth/login-form";
 
+/**
+ * Home Screen - Redirecionamento para Atleta ou Clube
+ *
+ * Esta tela verifica o tipo de usuário e redireciona para a área apropriada.
+ */
 export default function HomeScreen() {
-  const { isAuthenticated, isLoadingUserType, userType, user } = useJogaJuntoAuth();
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
-  if (!isAuthenticated) {
-    return <LoginForm />;
-  }
+  useEffect(() => {
+    if (loading) return;
 
-  if (isLoadingUserType) {
+    // Se estiver autenticado, redirecionar para área do atleta
+    // TODO: Verificar tipo de usuário (athlete vs club) no banco de dados
+    if (user) {
+      router.replace("/athlete/profile");
+      return;
+    }
+
+    // Se não estiver autenticado, permanecer na home
+  }, [user, loading, router]);
+
+  // Mostrar loading enquanto verifica autenticação
+  if (loading) {
     return (
       <ScreenContainer className="items-center justify-center">
-        <ActivityIndicator size="large" color="#0A7EA4" />
+        <ActivityIndicator size="large" color="#0a7ea4" />
       </ScreenContainer>
     );
   }
 
-  if (!userType) {
-    return (
-      <ScreenContainer className="p-6 justify-center items-center">
-        <Text className="text-lg text-foreground text-center">
-          Selecione seu tipo de perfil
-        </Text>
-      </ScreenContainer>
-    );
-  }
-
+  // Se não estiver autenticado, mostrar mensagem de boas-vindas
   return (
-    <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 gap-8">
-          {/* Hero Section */}
-          <View className="items-center gap-2">
-            <Text className="text-4xl font-bold text-foreground">Bem-vindo!</Text>
-            <Text className="text-base text-muted text-center">
-              {user?.name || "Usuário"} - {userType === "athlete" ? "Atleta" : "Clube"}
-            </Text>
-          </View>
-
-          {/* Status Card */}
-          <View className="w-full bg-surface rounded-2xl p-6 border border-border">
-            <Text className="text-lg font-semibold text-foreground mb-2">Joga Junto</Text>
-            <Text className="text-sm text-muted leading-relaxed">
-              {userType === "athlete"
-                ? "Envie vídeos de seus treinos e receba análise de desempenho com IA."
-                : "Acompanhe atletas e veja análises de desempenho em tempo real."}
-            </Text>
-          </View>
-
-          {/* Info */}
-          <View className="items-center">
-            <Text className="text-xs text-muted">Perfil: {userType}</Text>
-          </View>
+    <ScreenContainer className="items-center justify-center p-6">
+      <View className="items-center gap-4">
+        <Text className="text-6xl">⚽</Text>
+        <View>
+          <Text className="text-2xl font-bold text-foreground text-center">
+            Bem-vindo ao Joga Junto
+          </Text>
+          <Text className="text-muted text-center mt-2">
+            Carregando...
+          </Text>
         </View>
-      </ScrollView>
+      </View>
     </ScreenContainer>
   );
 }

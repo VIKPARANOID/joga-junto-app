@@ -180,6 +180,13 @@
 - [ ] Histórico de vídeos analisados
 - [ ] Ranking pessoal
 
+### Navegação do Atleta
+- [x] Tab bar com 3 abas (Perfil, Upload, Dashboard)
+- [x] Ícones customizados para cada aba
+- [x] Roteamento dinâmico entre telas
+- [x] Redirecionamento automático após login
+- [x] Home screen com lógica de redirecionamento
+
 ### Integração Frontend-Backend
 - [ ] Conectar upload ao analyze_video (Python)
 - [ ] Exibir KPIs reais do backend
