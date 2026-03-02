@@ -148,3 +148,40 @@
 - Vídeos devem ser processados de forma assíncrona
 - Implementar fila de processamento (Bull Queue ou similar)
 
+
+
+## Fase 5: Área do Atleta (Mobile)
+
+### Perfil Técnico do Atleta
+- [x] Tela de cadastro de perfil (/atleta/perfil)
+- [x] Formulário com altura (cm) - obrigatório
+- [x] Formulário com peso (kg)
+- [x] Seleção de posição (Goleiro, Zagueiro, Meia, Atacante)
+- [x] Seleção de perna dominante (Canhoto/Destro)
+- [x] Validação de dados
+- [x] Salvar perfil no banco de dados
+
+### Upload de Vídeo
+- [x] Tela de desafio de velocidade/drible (/atleta/upload)
+- [x] Card explicativo com instruções visuais
+- [x] Botão "Selecionar Vídeo" (com mock para testes)
+- [x] Validação de formato (MP4, MOV)
+- [x] Validação de tamanho (<100MB)
+- [x] Barra de progresso de upload
+- [x] Mensagem "Nossa IA está analisando seus movimentos..."
+- [x] Integração com backend (tRPC)
+
+### Dashboard do Atleta
+- [x] Tela de resultados (/atleta/dashboard)
+- [x] Exibição de KPIs (velocidade, agilidade, intensidade)
+- [x] Badge de nível (Bronze, Prata, Ouro)
+- [x] Comparativo com média da categoria
+- [x] Status do vídeo ("Disponível para Olheiros")
+- [ ] Histórico de vídeos analisados
+- [ ] Ranking pessoal
+
+### Integração Frontend-Backend
+- [ ] Conectar upload ao analyze_video (Python)
+- [ ] Exibir KPIs reais do backend
+- [ ] Sincronizar com dashboard do olheiro
+- [ ] Tratamento de erros de processamento
