@@ -34,9 +34,9 @@ export const videoRouter = router({
           processingStatus: "pending",
         });
 
-        // Chamar backend Python para análise (simulado por enquanto)
+        // Chamar backend Python para análise com altura do atleta
         // Em produção, isso seria uma chamada para o serviço Python
-        const kpis = await analyzeVideoWithPython(input.videoUrl);
+        const kpis = await analyzeVideoWithPython(input.videoUrl, athlete.heightCm || 175);
 
         // Salvar KPIs no banco
         if (kpis) {
@@ -140,7 +140,7 @@ export const videoRouter = router({
  * Função auxiliar para chamar backend Python
  * Em produção, seria uma chamada HTTP real para o serviço Python
  */
-async function analyzeVideoWithPython(videoUrl: string) {
+async function analyzeVideoWithPython(videoUrl: string, athleteHeightCm: number) {
   try {
     // Simular análise com dados realistas
     // Em produção, seria:

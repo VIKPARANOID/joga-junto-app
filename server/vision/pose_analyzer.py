@@ -1,17 +1,25 @@
 """
-Pose Analyzer - Análise de Movimento com MediaPipe
-Extrai skeleton (pose landmarks) de vídeos e calcula KPIs de desempenho
+Pose Analyzer - Análise Matemática Precisa de Movimento com MediaPipe
+Implementa calibração de escala (pixels → metros) e cálculo de velocidade/agilidade
 """
 
 import cv2
 import mediapipe as mp
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import json
 from pathlib import Path
 
 class PoseAnalyzer:
-    """Analisador de pose e movimento para atletas"""
+    """
+    Analisador de pose e movimento com calibração de escala precisa
+    
+    Algoritmo:
+    1. Calibração: Usar altura real do atleta para converter pixels em metros
+    2. Rastreamento: Centro de Massa (CoM) = ponto médio dos quadris
+    3. Velocidade: Distância euclidiana entre frames / tempo
+    4. Agilidade: Variância de movimento e mudanças de direção
+    """
 
     def __init__(self):
         """Inicializa MediaPipe Pose"""
@@ -24,13 +32,21 @@ class PoseAnalyzer:
             min_tracking_confidence=0.5
         )
         self.mp_drawing = mp.solutions.drawing_utils
+        
+        # Índices dos landmarks principais
+        self.NOSE = 0
+        self.LEFT_HEEL = 29
+        self.RIGHT_HEEL = 30
+        self.LEFT_HIP = 23
+        self.RIGHT_HIP = 24
 
-    def analyze_video(self, video_path: str) -> Dict:
+    def analyze_video(self, video_path: str, athlete_height_cm: float) -> Dict:
         """
-        Analisa um vídeo e extrai KPIs de desempenho
+        Analisa um vídeo e extrai KPIs com calibração de escala precisa
 
         Args:
             video_path: Caminho para o arquivo de vídeo
+            athlete_height_cm: Altura real do atleta em centímetros
 
         Returns:
             Dict com KPIs calculados
@@ -45,11 +61,16 @@ class PoseAnalyzer:
         frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         video_duration = frame_count / fps if fps > 0 else 0
 
+        if fps == 0:
+            return {"error": "FPS inválido"}
+
         # Listas para armazenar dados
         landmarks_history = []
         frame_count_processed = 0
+        scale_factor = None  # Será calculado no primeiro frame
         
         # Processar frames
+        frame_index = 0
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -63,19 +84,39 @@ class PoseAnalyzer:
             
             if results.pose_landmarks:
                 landmarks = self._extract_landmarks(results.pose_landmarks)
+                
+                # Calibrar escala no primeiro frame
+                if scale_factor is None:
+                    scale_factor = self._calculate_scale_factor(
+                        landmarks, 
+                        athlete_height_cm
+                    )
+                    if scale_factor is None:
+                        # Se falhar na calibração, usar valor padrão
+                        scale_factor = 0.0002  # metros por pixel (estimativa)
+                
                 landmarks_history.append(landmarks)
                 frame_count_processed += 1
+            
+            frame_index += 1
 
         cap.release()
 
-        # Calcular KPIs
-        kpis = self._calculate_kpis(landmarks_history, fps, video_duration)
+        # Calcular KPIs com escala calibrada
+        kpis = self._calculate_kpis(
+            landmarks_history, 
+            fps, 
+            video_duration,
+            scale_factor
+        )
         
         return {
             "success": True,
             "video_duration": video_duration,
             "frames_processed": frame_count_processed,
             "fps": fps,
+            "scale_factor": scale_factor,
+            "athlete_height_cm": athlete_height_cm,
             "kpis": kpis,
             "landmarks_count": len(landmarks_history)
         }
@@ -99,6 +140,8 @@ class PoseAnalyzer:
             26: "right_knee",
             27: "left_ankle",
             28: "right_ankle",
+            29: "left_heel",
+            30: "right_heel",
         }
         
         for idx, landmark in enumerate(pose_landmarks.landmark):
@@ -113,25 +156,100 @@ class PoseAnalyzer:
         
         return landmarks
 
-    def _calculate_kpis(self, landmarks_history: List[Dict], fps: float, duration: float) -> Dict:
+    def _calculate_scale_factor(self, frame_landmarks: Dict, athlete_height_cm: float) -> Optional[float]:
+        """
+        Calcula o fator de escala (metros por pixel) usando a altura do atleta
+        
+        Fórmula: S = H_m / H_p
+        onde:
+        - H_m = altura real do atleta em metros
+        - H_p = altura em pixels (distância entre nariz e calcanhares)
+        """
+        try:
+            # Verificar se temos os landmarks necessários
+            if "nose" not in frame_landmarks or "left_heel" not in frame_landmarks or "right_heel" not in frame_landmarks:
+                return None
+            
+            nose = frame_landmarks["nose"]
+            left_heel = frame_landmarks["left_heel"]
+            right_heel = frame_landmarks["right_heel"]
+            
+            # Calcular altura em pixels (distância euclidiana entre nariz e calcanhares)
+            # Usar a média dos dois calcanhares
+            heel_x = (left_heel["x"] + right_heel["x"]) / 2
+            heel_y = (left_heel["y"] + right_heel["y"]) / 2
+            
+            height_pixels = np.sqrt(
+                (nose["x"] - heel_x)**2 + 
+                (nose["y"] - heel_y)**2
+            )
+            
+            if height_pixels == 0:
+                return None
+            
+            # Converter altura real para metros
+            athlete_height_m = athlete_height_cm / 100.0
+            
+            # Calcular fator de escala: metros por pixel
+            scale_factor = athlete_height_m / height_pixels
+            
+            return scale_factor
+        
+        except Exception as e:
+            print(f"Erro ao calcular fator de escala: {e}")
+            return None
+
+    def _get_center_of_mass(self, frame_landmarks: Dict) -> Optional[Tuple[float, float]]:
+        """
+        Calcula o Centro de Massa (CoM) como o ponto médio dos quadris
+        
+        CoM_x = (x_23 + x_24) / 2
+        CoM_y = (y_23 + y_24) / 2
+        """
+        try:
+            if "left_hip" not in frame_landmarks or "right_hip" not in frame_landmarks:
+                return None
+            
+            left_hip = frame_landmarks["left_hip"]
+            right_hip = frame_landmarks["right_hip"]
+            
+            com_x = (left_hip["x"] + right_hip["x"]) / 2
+            com_y = (left_hip["y"] + right_hip["y"]) / 2
+            
+            return (com_x, com_y)
+        
+        except Exception as e:
+            print(f"Erro ao calcular CoM: {e}")
+            return None
+
+    def _calculate_kpis(self, landmarks_history: List[Dict], fps: float, duration: float, scale_factor: float) -> Dict:
         """Calcula KPIs de desempenho baseado no histórico de landmarks"""
         
         if not landmarks_history or fps == 0:
             return self._default_kpis()
 
-        # Calcular velocidade média
-        avg_speed, max_speed = self._calculate_speed(landmarks_history, fps)
+        # Calcular velocidades
+        velocities = self._calculate_velocities(landmarks_history, fps, scale_factor)
         
-        # Contar sprints (acelerações)
-        sprints_count = self._count_sprints(landmarks_history, fps)
+        if not velocities:
+            return self._default_kpis()
+        
+        avg_speed = np.mean(velocities)
+        max_speed = np.max(velocities)
+        
+        # Contar sprints (velocidades > 80% da máxima)
+        sprints_count = self._count_sprints(velocities)
         
         # Distância percorrida
-        distance_covered = self._calculate_distance(landmarks_history)
+        distance_covered = self._calculate_distance(landmarks_history, scale_factor)
         
-        # Score de intensidade (baseado em movimento)
-        intensity_score = self._calculate_intensity(landmarks_history)
+        # Score de agilidade (variância de movimento)
+        agility_score = self._calculate_agility(landmarks_history)
         
-        # Precisão de passes (simulado - em produção seria mais complexo)
+        # Score de intensidade
+        intensity_score = self._calculate_intensity(velocities)
+        
+        # Precisão de passes (baseado em estabilidade)
         pass_accuracy = self._estimate_pass_accuracy(landmarks_history)
         
         return {
@@ -139,108 +257,77 @@ class PoseAnalyzer:
             "max_speed_kmh": round(max_speed, 2),
             "sprints_count": sprints_count,
             "distance_covered_m": round(distance_covered, 2),
+            "agility_score": round(agility_score, 0),
             "intensity_score": round(intensity_score, 0),
             "pass_accuracy_percent": round(pass_accuracy, 0),
             "video_duration_seconds": round(duration, 2),
             "frames_analyzed": len(landmarks_history)
         }
 
-    def _calculate_speed(self, landmarks_history: List[Dict], fps: float) -> Tuple[float, float]:
-        """Calcula velocidade média e máxima baseada no movimento do corpo"""
-        if len(landmarks_history) < 2:
-            return 0, 0
-
-        speeds = []
+    def _calculate_velocities(self, landmarks_history: List[Dict], fps: float, scale_factor: float) -> List[float]:
+        """
+        Calcula velocidade instantânea para cada frame
         
-        # Usar centro do corpo (média de ombros e quadris)
+        Fórmula:
+        Δd_pixels = sqrt((CoM_x,t - CoM_x,t-1)² + (CoM_y,t - CoM_y,t-1)²)
+        Δd_meters = Δd_pixels × S
+        V = Δd_meters / Δt (em m/s)
+        V_kmh = V × 3.6
+        """
+        velocities = []
+        delta_t = 1 / fps  # Tempo entre frames em segundos
+        
         for i in range(1, len(landmarks_history)):
             prev_frame = landmarks_history[i - 1]
             curr_frame = landmarks_history[i]
             
-            # Calcular posição do centro do corpo
-            prev_center = self._get_body_center(prev_frame)
-            curr_center = self._get_body_center(curr_frame)
+            prev_com = self._get_center_of_mass(prev_frame)
+            curr_com = self._get_center_of_mass(curr_frame)
             
-            if prev_center and curr_center:
-                # Distância em pixels
-                pixel_distance = np.sqrt(
-                    (curr_center[0] - prev_center[0])**2 + 
-                    (curr_center[1] - prev_center[1])**2
+            if prev_com and curr_com:
+                # Distância euclidiana em pixels
+                delta_d_pixels = np.sqrt(
+                    (curr_com[0] - prev_com[0])**2 + 
+                    (curr_com[1] - prev_com[1])**2
                 )
                 
-                # Converter para km/h (estimativa: 1 pixel ≈ 0.02 cm)
-                # Fórmula: distância (cm) / tempo (s) * 3.6 = km/h
-                time_between_frames = 1 / fps
-                speed_kmh = (pixel_distance * 0.02) / time_between_frames * 3.6
-                speeds.append(speed_kmh)
+                # Converter para metros
+                delta_d_meters = delta_d_pixels * scale_factor
+                
+                # Velocidade em m/s
+                velocity_ms = delta_d_meters / delta_t
+                
+                # Converter para km/h
+                velocity_kmh = velocity_ms * 3.6
+                
+                velocities.append(velocity_kmh)
         
-        if not speeds:
-            return 0, 0
-        
-        avg_speed = np.mean(speeds)
-        max_speed = np.max(speeds)
-        
-        return avg_speed, max_speed
+        return velocities
 
-    def _get_body_center(self, frame_landmarks: Dict) -> Tuple[float, float]:
-        """Calcula o centro do corpo"""
-        points = []
-        
-        for key in ["left_shoulder", "right_shoulder", "left_hip", "right_hip"]:
-            if key in frame_landmarks:
-                landmark = frame_landmarks[key]
-                points.append((landmark["x"], landmark["y"]))
-        
-        if not points:
-            return None
-        
-        center_x = np.mean([p[0] for p in points])
-        center_y = np.mean([p[1] for p in points])
-        
-        return (center_x, center_y)
-
-    def _count_sprints(self, landmarks_history: List[Dict], fps: float) -> int:
-        """Conta acelerações rápidas (sprints)"""
-        if len(landmarks_history) < 10:
-            return 0
-
-        speeds = []
-        for i in range(1, len(landmarks_history)):
-            prev_frame = landmarks_history[i - 1]
-            curr_frame = landmarks_history[i]
-            
-            prev_center = self._get_body_center(prev_frame)
-            curr_center = self._get_body_center(curr_frame)
-            
-            if prev_center and curr_center:
-                pixel_distance = np.sqrt(
-                    (curr_center[0] - prev_center[0])**2 + 
-                    (curr_center[1] - prev_center[1])**2
-                )
-                time_between_frames = 1 / fps
-                speed_kmh = (pixel_distance * 0.02) / time_between_frames * 3.6
-                speeds.append(speed_kmh)
-        
-        if not speeds:
+    def _count_sprints(self, velocities: List[float]) -> int:
+        """
+        Conta acelerações rápidas (sprints)
+        Sprint = velocidade > 80% da máxima
+        """
+        if not velocities:
             return 0
         
-        # Considerar sprint quando velocidade > 80% da máxima
-        max_speed = np.max(speeds) if speeds else 0
-        sprint_threshold = max_speed * 0.8
+        max_velocity = np.max(velocities)
+        sprint_threshold = max_velocity * 0.8
         
         sprint_count = 0
         in_sprint = False
         
-        for speed in speeds:
-            if speed > sprint_threshold and not in_sprint:
+        for velocity in velocities:
+            if velocity > sprint_threshold and not in_sprint:
                 sprint_count += 1
                 in_sprint = True
-            elif speed <= sprint_threshold:
+            elif velocity <= sprint_threshold:
                 in_sprint = False
         
         return sprint_count
 
-    def _calculate_distance(self, landmarks_history: List[Dict]) -> float:
+    def _calculate_distance(self, landmarks_history: List[Dict], scale_factor: float) -> float:
         """Calcula distância total percorrida"""
         if len(landmarks_history) < 2:
             return 0
@@ -251,77 +338,93 @@ class PoseAnalyzer:
             prev_frame = landmarks_history[i - 1]
             curr_frame = landmarks_history[i]
             
-            prev_center = self._get_body_center(prev_frame)
-            curr_center = self._get_body_center(curr_frame)
+            prev_com = self._get_center_of_mass(prev_frame)
+            curr_com = self._get_center_of_mass(curr_frame)
             
-            if prev_center and curr_center:
-                pixel_distance = np.sqrt(
-                    (curr_center[0] - prev_center[0])**2 + 
-                    (curr_center[1] - prev_center[1])**2
+            if prev_com and curr_com:
+                delta_d_pixels = np.sqrt(
+                    (curr_com[0] - prev_com[0])**2 + 
+                    (curr_com[1] - prev_com[1])**2
                 )
-                # Converter pixels para metros (estimativa)
-                distance_m = pixel_distance * 0.02 / 100
-                total_distance += distance_m
+                delta_d_meters = delta_d_pixels * scale_factor
+                total_distance += delta_d_meters
         
         return total_distance
 
-    def _calculate_intensity(self, landmarks_history: List[Dict]) -> float:
-        """Calcula score de intensidade baseado em movimento"""
-        if len(landmarks_history) < 2:
+    def _calculate_agility(self, landmarks_history: List[Dict]) -> float:
+        """
+        Calcula score de agilidade baseado em mudanças de direção
+        Quanto maior a variância de movimento, maior a agilidade
+        """
+        if len(landmarks_history) < 3:
             return 0
 
-        movements = []
+        direction_changes = []
         
-        for i in range(1, len(landmarks_history)):
-            prev_frame = landmarks_history[i - 1]
-            curr_frame = landmarks_history[i]
+        for i in range(1, len(landmarks_history) - 1):
+            prev_com = self._get_center_of_mass(landmarks_history[i - 1])
+            curr_com = self._get_center_of_mass(landmarks_history[i])
+            next_com = self._get_center_of_mass(landmarks_history[i + 1])
             
-            # Calcular movimento total do corpo
-            total_movement = 0
-            count = 0
-            
-            for key in prev_frame:
-                if key in curr_frame:
-                    prev_point = prev_frame[key]
-                    curr_point = curr_frame[key]
-                    
-                    movement = np.sqrt(
-                        (curr_point["x"] - prev_point["x"])**2 + 
-                        (curr_point["y"] - prev_point["y"])**2
-                    )
-                    total_movement += movement
-                    count += 1
-            
-            if count > 0:
-                avg_movement = total_movement / count
-                movements.append(avg_movement)
+            if prev_com and curr_com and next_com:
+                # Vetor de movimento anterior
+                vec1 = (curr_com[0] - prev_com[0], curr_com[1] - prev_com[1])
+                # Vetor de movimento seguinte
+                vec2 = (next_com[0] - curr_com[0], next_com[1] - curr_com[1])
+                
+                # Calcular ângulo entre vetores (cosseno)
+                dot_product = vec1[0] * vec2[0] + vec1[1] * vec2[1]
+                mag1 = np.sqrt(vec1[0]**2 + vec1[1]**2)
+                mag2 = np.sqrt(vec2[0]**2 + vec2[1]**2)
+                
+                if mag1 > 0 and mag2 > 0:
+                    cos_angle = dot_product / (mag1 * mag2)
+                    # Normalizar para 0-1 (0 = mudança de direção, 1 = mesma direção)
+                    change = (1 - cos_angle) / 2
+                    direction_changes.append(change)
         
-        if not movements:
+        if not direction_changes:
             return 0
         
-        # Normalizar para 0-100
-        intensity = (np.mean(movements) * 100) * 10
+        # Agilidade = média de mudanças de direção * 100
+        agility = np.mean(direction_changes) * 100
+        return min(agility, 100)
+
+    def _calculate_intensity(self, velocities: List[float]) -> float:
+        """
+        Calcula score de intensidade baseado em velocidades
+        Considera média e variância de velocidades
+        """
+        if not velocities:
+            return 0
+        
+        avg_velocity = np.mean(velocities)
+        velocity_variance = np.var(velocities)
+        
+        # Normalizar: velocidade média + variância
+        # Velocidade típica de atleta: 5-35 km/h
+        intensity = (avg_velocity / 35 * 50) + (velocity_variance / 100 * 50)
+        
         return min(intensity, 100)
 
     def _estimate_pass_accuracy(self, landmarks_history: List[Dict]) -> float:
-        """Estima precisão de passes baseado em estabilidade de movimento"""
+        """
+        Estima precisão de passes baseado em estabilidade de movimento
+        Quanto menor a variância, mais controlado o movimento
+        """
         if len(landmarks_history) < 10:
             return 0
 
-        # Calcular variância de movimento (quanto menor, mais controlado)
         movements = []
         
         for i in range(1, len(landmarks_history)):
-            prev_frame = landmarks_history[i - 1]
-            curr_frame = landmarks_history[i]
+            prev_com = self._get_center_of_mass(landmarks_history[i - 1])
+            curr_com = self._get_center_of_mass(landmarks_history[i])
             
-            prev_center = self._get_body_center(prev_frame)
-            curr_center = self._get_body_center(curr_frame)
-            
-            if prev_center and curr_center:
+            if prev_com and curr_com:
                 movement = np.sqrt(
-                    (curr_center[0] - prev_center[0])**2 + 
-                    (curr_center[1] - prev_center[1])**2
+                    (curr_com[0] - prev_com[0])**2 + 
+                    (curr_com[1] - prev_com[1])**2
                 )
                 movements.append(movement)
         
@@ -330,7 +433,8 @@ class PoseAnalyzer:
         
         # Quanto menor a variância, melhor o controle
         variance = np.var(movements)
-        accuracy = 100 - (variance * 10)
+        accuracy = 100 - (variance * 1000)  # Escalar a variância
+        
         return max(0, min(accuracy, 100))
 
     def _default_kpis(self) -> Dict:
@@ -340,6 +444,7 @@ class PoseAnalyzer:
             "max_speed_kmh": 0,
             "sprints_count": 0,
             "distance_covered_m": 0,
+            "agility_score": 0,
             "intensity_score": 0,
             "pass_accuracy_percent": 0,
             "video_duration_seconds": 0,
@@ -363,10 +468,12 @@ if __name__ == "__main__":
     
     # Exemplo de uso
     video_path = "sample_video.mp4"
+    athlete_height_cm = 175  # 1.75 metros
     
     if Path(video_path).exists():
         print(f"Analisando vídeo: {video_path}")
-        result = analyzer.analyze_video(video_path)
+        print(f"Altura do atleta: {athlete_height_cm} cm")
+        result = analyzer.analyze_video(video_path, athlete_height_cm)
         print(json.dumps(result, indent=2))
         
         # Salvar resultado
