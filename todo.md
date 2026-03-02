@@ -258,3 +258,37 @@
 - [x] Tema visual profissional
 - [x] Animações suaves
 - [x] Indicador de "Perfil Público"
+
+
+## Fase 8: Integração Dashboard Web com Backend
+
+### Cliente tRPC no Next.js
+- [x] Configurar cliente tRPC no Next.js
+- [x] Criar hooks customizados para queries
+- [ ] Implementar cache e revalidação
+- [x] Tratamento de erros de API
+
+### Substituição de Dados Mockados
+- [x] Conectar componente AthleteCard ao backend
+- [x] Buscar lista de atletas com KPIs
+- [x] Buscar rankings ordenáveis
+- [ ] Implementar paginação
+
+### Filtros Dinâmicos
+- [x] Filtrar por idade
+- [x] Filtrar por posição
+- [x] Filtrar por perna dominante
+- [x] Filtrar por score mínimo
+- [x] Aplicar múltiplos filtros simultaneamente
+
+### Performance
+- [ ] Implementar infinite scroll
+- [ ] Cache de dados
+- [ ] Debounce de filtros
+- [ ] Otimizar queries
+
+### Modal de Vídeo
+- [ ] Buscar vídeo real do S3
+- [ ] Exibir player de vídeo
+- [ ] Mostrar KPIs do vídeo
+- [ ] Botão de contato funcional

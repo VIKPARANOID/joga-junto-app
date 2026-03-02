@@ -1,10 +1,101 @@
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { getDb } from "./db";
-import { athletes, videos, kpis } from "@/drizzle/schema";
-import { eq } from "drizzle-orm";
+import { athletes, videos, kpis, athleteRankings } from "@/drizzle/schema";
+import { eq, and, gte, lte, or } from "drizzle-orm";
 
 export const publicRouter = router({
+  /**
+   * Buscar lista de atletas com filtros e ordenação
+   */
+  listAthletes: publicProcedure
+    .input(
+      z.object({
+        minAge: z.number().optional(),
+        maxAge: z.number().optional(),
+        position: z.string().optional(),
+        preferredFoot: z.enum(["left", "right", "both"]).optional(),
+        minScore: z.number().optional(),
+        sortBy: z.enum(["speed", "agilidade", "intensidade", "nome"]).optional(),
+        sortOrder: z.enum(["asc", "desc"]).optional(),
+        limit: z.number().default(20),
+        offset: z.number().default(0),
+      })
+    )
+    .query(async (opts: any) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      const {
+        minAge,
+        maxAge,
+        position,
+        preferredFoot,
+        minScore,
+        sortBy = "speed",
+        sortOrder = "desc",
+        limit,
+        offset,
+      } = opts.input;
+
+      // Construir filtros
+      const filters = [];
+
+      if (minAge || maxAge) {
+        const now = new Date();
+        if (maxAge) {
+          const maxBirthDate = new Date(now.getFullYear() - maxAge, now.getMonth(), now.getDate());
+          filters.push(gte(athletes.dateOfBirth, maxBirthDate.toISOString().split("T")[0]));
+        }
+        if (minAge) {
+          const minBirthDate = new Date(now.getFullYear() - minAge, now.getMonth(), now.getDate());
+          filters.push(lte(athletes.dateOfBirth, minBirthDate.toISOString().split("T")[0]));
+        }
+      }
+
+      if (position) {
+        filters.push(eq(athletes.position, position));
+      }
+
+      if (preferredFoot) {
+        filters.push(eq(athletes.preferredFoot, preferredFoot));
+      }
+
+      // Buscar atletas
+      let query = db.select({
+        id: athletes.id,
+        heightCm: athletes.heightCm,
+        position: athletes.position,
+        preferredFoot: athletes.preferredFoot,
+        clubName: athletes.clubName,
+        bio: athletes.bio,
+        ranking: athleteRankings.overallScore,
+        speedScore: athleteRankings.speedScore,
+        dribblingScore: athleteRankings.dribblingScore,
+        accuracyScore: athleteRankings.accuracyScore,
+        avgIntensity: athleteRankings.avgIntensity,
+        totalVideos: athleteRankings.totalVideos,
+      });
+
+      // TODO: Implementar JOIN com athleteRankings
+      // Por enquanto, retornar atletas simples
+
+      const athletesList = await db
+        .select({
+          id: athletes.id,
+          heightCm: athletes.heightCm,
+          position: athletes.position,
+          preferredFoot: athletes.preferredFoot,
+          clubName: athletes.clubName,
+          bio: athletes.bio,
+        })
+        .from(athletes)
+        .limit(limit)
+        .offset(offset);
+
+      return athletesList;
+    }),
+
   /**
    * Buscar perfil público de um atleta
    * Retorna apenas dados públicos (sem email, telefone privado, etc)
