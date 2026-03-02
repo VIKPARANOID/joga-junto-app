@@ -28,11 +28,11 @@ const schemeFromBundleId = `manus${timestamp}`;
 
 const env = {
   // App branding - update these values directly (do not use env vars)
-  appName: "Joga Junto - IA para Atletas de Base",
+  appName: "Joga Junto",
   appSlug: "joga-junto-app",
   // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
   // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663309771678/Zq6BHy3Mmvo5iyZThcsMCu/icon-6wmiMeUT7oNfX9uzgkL2tq.webp",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -51,7 +51,10 @@ const config: ExpoConfig = {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
     "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Precisamos de acesso à câmera para gravar vídeos de análise de desempenho.",
+        "NSPhotoLibraryUsageDescription": "Precisamos de acesso à galeria para selecionar vídeos para análise.",
+        "NSPhotoLibraryAddUsageDescription": "Precisamos de permissão para salvar vídeos na galeria."
       }
   },
   android: {
@@ -64,7 +67,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    permissions: ["POST_NOTIFICATIONS"],
+    permissions: ["POST_NOTIFICATIONS", "CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"],
     intentFilters: [
       {
         action: "VIEW",
