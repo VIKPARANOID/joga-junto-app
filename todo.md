@@ -64,16 +64,16 @@
 - [x] Migrations Drizzle ORM
 
 ### Visão Computacional - Python
-- [ ] Script básico OpenCV + MediaPipe
-- [ ] Extração de frames de vídeo
-- [ ] Pose Landmark Detection (33 keypoints)
-- [ ] Cálculo de velocidade média
-- [ ] Cálculo de velocidade máxima
-- [ ] Cálculo de distância percorrida
-- [ ] Cálculo de sprints
-- [ ] Cálculo de aceleração
-- [ ] Geração de JSON com KPIs
-- [ ] Integração com backend (subprocess call)
+- [x] Script básico OpenCV + MediaPipe
+- [x] Extração de frames de vídeo
+- [x] Pose Landmark Detection (33 keypoints)
+- [x] Cálculo de velocidade média
+- [x] Cálculo de velocidade máxima
+- [x] Cálculo de distância percorrida
+- [x] Cálculo de sprints
+- [x] Cálculo de aceleração
+- [x] Geração de JSON com KPIs
+- [x] Integração com backend (tRPC router)
 
 ### Área do Atleta - Frontend
 - [ ] Tela Home do Atleta
@@ -81,13 +81,13 @@
 - [ ] Histórico de vídeos
 - [ ] Detalhes de cada análise
 
-### Área do Clube - Frontend
-- [ ] Tela Feed de Atletas
-- [ ] Lista de atletas com últimos vídeos
-- [ ] Tela de Ranking
-- [ ] Ordenação por KPI (velocidade, precisão, geral)
-- [ ] Tela de Detalhes do Atleta
-- [ ] Botão de Seguir Atleta
+### Área do Clube - Frontend (Dashboard Web)
+- [x] Tela Feed de Atletas (Cards com gráficos)
+- [x] Lista de atletas com últimos vídeos
+- [x] Tela de Ranking (Sidebar com filtros)
+- [x] Ordenação por KPI (velocidade, precisão, geral)
+- [x] Tela de Detalhes do Atleta (Modal com vídeo)
+- [x] Botão de Entrar em Contato
 
 ### Integração Frontend-Backend
 - [ ] tRPC client setup
