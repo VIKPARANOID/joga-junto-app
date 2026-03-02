@@ -292,3 +292,42 @@
 - [ ] Exibir player de vídeo
 - [ ] Mostrar KPIs do vídeo
 - [ ] Botão de contato funcional
+
+
+## Fase 9: Sistema de Cache e Otimização de Performance
+
+### React Query (TanStack Query)
+- [x] Instalar @tanstack/react-query no Next.js
+- [x] Configurar QueryClient com opções de cache
+- [x] Envolver app com QueryClientProvider
+- [x] Converter hooks para useQuery/useMutation
+
+### Cache de Dados
+- [x] Cache automático de listAthletes
+- [x] Cache de perfil público do atleta
+- [x] Cache de vídeos do atleta
+- [x] Cache de KPIs
+- [x] Definir TTL (time-to-live) para cada query
+
+### Persistência Local
+- [x] Implementar persistência com localStorage
+- [x] Sincronizar cache com storage
+- [x] Recuperar cache ao recarregar página
+- [x] Limpar cache expirado
+
+### Invalidação de Cache
+- [x] Invalidar ao atualizar filtros
+- [x] Invalidar ao mudar ordenação
+- [ ] Invalidar ao fazer upload de vídeo
+- [ ] Invalidar ao seguir/deixar de seguir atleta
+
+### Debounce e Otimização
+- [x] Debounce de 300ms nos filtros
+- [x] Debounce na busca por nome
+- [x] Prefetch de próxima página
+- [ ] Lazy load de imagens
+
+### Monitoramento
+- [ ] Adicionar logs de cache hits/misses
+- [ ] Monitorar tamanho do cache
+- [ ] Alertar quando cache fica muito grande
