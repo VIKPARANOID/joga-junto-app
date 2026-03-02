@@ -331,3 +331,31 @@
 - [ ] Adicionar logs de cache hits/misses
 - [ ] Monitorar tamanho do cache
 - [ ] Alertar quando cache fica muito grande
+
+
+## Fase 10: Lazy Loading de Imagens
+
+### Componente de Imagem Lazy
+- [x] Criar componente LazyImage com Intersection Observer
+- [x] Implementar placeholder/skeleton
+- [x] Adicionar blur-up effect
+- [x] Fallback de erro com avatar padrão
+- [x] Otimizar tamanho de imagens
+
+### Integração no Dashboard
+- [x] Aplicar lazy loading em cards de atletas
+- [ ] Aplicar lazy loading em modal de atleta
+- [ ] Aplicar lazy loading em histórico de vídeos
+- [ ] Testar performance de carregamento
+
+### Otimização de Imagens
+- [x] Redimensionar imagens para diferentes resoluções
+- [x] Comprimir imagens (WebP, JPEG)
+- [x] Gerar srcset para responsividade
+- [x] Cache de imagens no browser
+
+### Monitoramento
+- [x] Medir tempo de carregamento inicial
+- [x] Medir tempo de scroll
+- [x] Contar imagens carregadas vs não carregadas
+- [x] Rastrear erros de carregamento
