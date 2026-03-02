@@ -192,3 +192,31 @@
 - [ ] Exibir KPIs reais do backend
 - [ ] Sincronizar com dashboard do olheiro
 - [ ] Tratamento de erros de processamento
+
+
+## Fase 6: Dashboard Avançado do Atleta
+
+### Componentes de KPIs
+- [x] Componente KPI Card com ícone e valor
+- [x] Componente Radar Chart (gráfico de radar)
+- [x] Componente Progress Bar (barra de progresso)
+- [x] Componente Badge de nível dinâmico
+
+### Integração com Backend
+- [x] Buscar KPIs do último vídeo via tRPC
+- [x] Buscar histórico de vídeos
+- [x] Buscar comparativo com categoria
+- [x] Tratamento de estados (loading, error, empty)
+
+### Exibição de Dados
+- [x] KPIs principais em cards (velocidade, agilidade, intensidade)
+- [x] Gráfico radar com 3 métricas
+- [x] Histórico de vídeos em lista
+- [x] Comparativo com média da categoria
+- [x] Trend de melhoria (seta para cima/baixo)
+
+### UX/Polish
+- [x] Animações de carregamento
+- [x] Mensagens de erro amigáveis
+- [x] Estado vazio quando sem vídeos
+- [x] Refresh manual de dados
