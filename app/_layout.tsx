@@ -88,6 +88,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="athlete" />
+            <Stack.Screen name="athlete-public" />
             <Stack.Screen name="oauth/callback" />
           </Stack>
           <StatusBar style="auto" />

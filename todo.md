@@ -220,3 +220,41 @@
 - [x] Mensagens de erro amigáveis
 - [x] Estado vazio quando sem vídeos
 - [x] Refresh manual de dados
+
+
+## Fase 7: Perfil Público do Atleta
+
+### Tela de Perfil Público
+- [x] Rota dinâmica `/athlete-public/[id]`
+- [x] Exibição de dados básicos (nome, idade, posição, altura)
+- [x] Foto de perfil/avatar
+- [x] Badge de nível (Bronze/Prata/Ouro)
+- [x] KPIs principais em cards
+- [x] Gráfico radar de desempenho
+- [x] Histórico de vídeos com thumbnails
+- [x] Estatísticas gerais (total de vídeos, média de velocidade)
+
+### Link Compartilhável
+- [x] Gerar URL única por atleta
+- [x] Copiar link para clipboard (mock)
+- [x] Compartilhar via WhatsApp/Email (mock)
+- [ ] QR Code com link do perfil
+- [x] Validação de acesso público
+
+### Integração com Backend
+- [x] Endpoint tRPC para buscar perfil público
+- [x] Filtrar apenas dados públicos
+- [ ] Cache de perfis públicos
+- [x] Validação de permissões
+
+### Botão de Contato
+- [x] Botão "Entrar em Contato" para olheiros
+- [x] Modal com opções (WhatsApp, Email, Formulário)
+- [x] Enviar mensagem para atleta (mock)
+- [ ] Registrar interesse do olheiro
+
+### UX/Design
+- [x] Layout responsivo para mobile e web
+- [x] Tema visual profissional
+- [x] Animações suaves
+- [x] Indicador de "Perfil Público"
