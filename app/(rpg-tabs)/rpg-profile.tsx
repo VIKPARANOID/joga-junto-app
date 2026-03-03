@@ -1,4 +1,5 @@
 import { ScrollView, Text, View, Pressable, FlatList } from "react-native";
+import { PlayerAvatar2D } from "@/components/player-avatar-2d";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -42,6 +43,20 @@ export default function RPGProfileScreen() {
             <Text className="text-sm text-muted">
               {rpgClass.name} - Nível {level}
             </Text>
+          </View>
+
+          {/* Avatar Display */}
+          <View className="items-center gap-3">
+            <PlayerAvatar2D
+              class={classToUse}
+              level={level}
+              size="large"
+              equippedItems={{
+                shoes: "gold-shoes",
+                uniform: "default-uniform",
+                aura: "aura-gold",
+              }}
+            />
           </View>
 
           {/* Profile Card */}

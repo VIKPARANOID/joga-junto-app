@@ -86,6 +86,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(rpg-tabs)" />
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="athlete-rpg" />
             <Stack.Screen name="athlete" />
             <Stack.Screen name="athlete-public" />
             <Stack.Screen name="demo-athlete" />
