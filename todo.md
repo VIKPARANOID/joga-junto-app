@@ -418,3 +418,42 @@
 - [ ] Aplicar em upload de vídeo
 - [ ] Aplicar em dashboard
 - [ ] Aplicar em perfil
+
+
+## Fase 13: Otimização de Upload de Vídeo e Padronização
+
+### Vídeo de Instruções com IA
+- [ ] Criar vídeo de demonstração (30-60s)
+- [ ] Mostrar posicionamento correto da câmera
+- [ ] Demonstrar iluminação ideal
+- [ ] Mostrar movimentos esperados (sprint, drible, passe)
+- [ ] Incluir áudio com instruções
+
+### Otimização de Upload
+- [ ] Validar formato (MP4, MOV)
+- [ ] Validar duração (máx 30s)
+- [ ] Validar tamanho (máx 100MB)
+- [ ] Compressão automática se necessário
+- [ ] Feedback de progresso em tempo real
+- [ ] Estimativa de tempo de análise
+
+### Padronização de Vídeos
+- [ ] Checklist antes de enviar
+- [ ] Validação de iluminação (detectar se muito escuro)
+- [ ] Validação de movimento (detectar se estático)
+- [ ] Validação de fundo (detectar se muito poluído)
+- [ ] Recomendações de melhoria
+
+### Descrição Escrita
+- [ ] Instruções sobre iluminação
+- [ ] Instruções sobre fundo
+- [ ] Instruções sobre posicionamento
+- [ ] Instruções sobre duração
+- [ ] Instruções sobre movimentos
+- [ ] Exemplos visuais (imagens/ícones)
+
+### Feedback do Usuário
+- [ ] Mostrar checklist de validação
+- [ ] Indicar quais critérios foram atendidos
+- [ ] Sugerir melhorias antes de enviar
+- [ ] Permitir reenvio se não atender critérios

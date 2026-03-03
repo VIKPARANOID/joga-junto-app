@@ -1,12 +1,12 @@
-import { ScreenContainer } from "@/components/screen-container";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { LoadingScreen } from "@/components/loading-spinner";
 import { ErrorBanner } from "@/components/error-screen";
-import * as WebBrowser from "expo-web-browser";
 import { useAuth } from "@/hooks/use-auth";
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Image } from "react-native";
+import { trpc } from "@/lib/trpc";
+import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { ScreenContainer } from "@/components/screen-container";
 import * as Haptics from "expo-haptics";
 
 export default function LoginScreen() {
@@ -15,9 +15,14 @@ export default function LoginScreen() {
   const { isAuthenticated, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Mutations tRPC
+  const loginMutation = trpc.auth.login.useMutation();
+  const signupMutation = trpc.auth.signup.useMutation();
 
   // Se já está autenticado, redirecionar
   if (isAuthenticated && !loading) {
@@ -33,38 +38,19 @@ export default function LoginScreen() {
     );
   }
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-
-      // CRITICO: Usar scheme dinamico em vez de hardcoded localhost
-      const redirectUri = "exp://localhost:8081/oauth";
-      const authUrl = `https://api.manus.im/oauth/authorize?client_id=joga-junto&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}`;
-
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
-
-      if (result.type === "success") {
-        router.replace("/user-type-selection");
-      } else if (result.type === "cancel") {
-        setError("Login cancelado");
-      }
-    } catch (err: any) {
-      setError(err.message || "Erro ao fazer login com Google");
-    } finally {
-      setIsLoading(false);
-    }
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   };
 
-  const handleEmailLogin = async () => {
+  const handleEmailAuth = async () => {
+    // Validações
     if (!email || !password) {
       setError("Preencha email e senha");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!validateEmail(email)) {
       setError("Email inválido");
       return;
     }
@@ -74,17 +60,40 @@ export default function LoginScreen() {
       return;
     }
 
+    if (isSignUp && !name) {
+      setError("Preencha seu nome");
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
       if (isSignUp) {
-        setError("Signup por email em desenvolvimento. Use Google Sign-In por enquanto.");
+        // Signup
+        console.log("[LoginScreen] Attempting signup with:", { email, name });
+        await signupMutation.mutateAsync({
+          email,
+          password,
+          name,
+        });
+        console.log("[LoginScreen] Signup successful, redirecting to user-type-selection");
+        router.replace("/user-type-selection");
       } else {
-        setError("Login por email em desenvolvimento. Use Google Sign-In por enquanto.");
+        // Login
+        console.log("[LoginScreen] Attempting login with:", { email });
+        await loginMutation.mutateAsync({
+          email,
+          password,
+        });
+        console.log("[LoginScreen] Login successful, redirecting to user-type-selection");
+        router.replace("/user-type-selection");
       }
-    } finally {
+    } catch (err: any) {
+      console.error("[LoginScreen] Auth error:", err);
+      const errorMessage = err.message || (isSignUp ? "Erro ao criar conta" : "Erro ao fazer login");
+      setError(errorMessage);
       setIsLoading(false);
     }
   };
@@ -95,12 +104,12 @@ export default function LoginScreen() {
         <View className="flex-1 justify-between py-8 px-6">
           {/* Header */}
           <View className="items-center gap-4">
-            <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-2">
+            <View className="w-20 h-20 rounded-full items-center justify-center mb-2" style={{ backgroundColor: colors.primary }}>
               <Text className="text-4xl">⚽</Text>
             </View>
             <Text className="text-3xl font-bold text-foreground">Joga Junto</Text>
             <Text className="text-base text-muted text-center">
-              Análise de desempenho com IA para atletas
+              {isSignUp ? "Crie sua conta" : "Análise de desempenho com IA para atletas"}
             </Text>
           </View>
 
@@ -109,6 +118,21 @@ export default function LoginScreen() {
 
           {/* Form */}
           <View className="gap-4">
+            {/* Name Input (only for signup) */}
+            {isSignUp && (
+              <View className="gap-2">
+                <Text className="text-sm font-semibold text-foreground">Nome Completo</Text>
+                <TextInput
+                  className="bg-surface border border-border rounded-lg px-4 py-3 text-foreground"
+                  placeholder="Seu nome"
+                  placeholderTextColor={colors.muted}
+                  value={name}
+                  onChangeText={setName}
+                  editable={!isLoading}
+                />
+              </View>
+            )}
+
             {/* Email Input */}
             <View className="gap-2">
               <Text className="text-sm font-semibold text-foreground">Email</Text>
@@ -120,6 +144,7 @@ export default function LoginScreen() {
                 onChangeText={setEmail}
                 editable={!isLoading}
                 keyboardType="email-address"
+                autoCapitalize="none"
               />
             </View>
 
@@ -137,15 +162,20 @@ export default function LoginScreen() {
               />
             </View>
 
-            {/* Login Button */}
+            {/* Auth Button */}
             <TouchableOpacity
-              className="bg-primary rounded-lg py-4 items-center mt-2 active:opacity-80"
-              onPress={handleEmailLogin}
+              className="rounded-lg py-4 items-center mt-2 active:opacity-80"
+              onPress={handleEmailAuth}
               disabled={isLoading}
+              style={{ backgroundColor: colors.primary }}
             >
-              <Text className="text-white font-semibold text-base">
-                {isSignUp ? "Criar Conta" : "Entrar"}
-              </Text>
+              {isLoading ? (
+                <Text className="text-white font-semibold text-base">Aguarde...</Text>
+              ) : (
+                <Text className="text-white font-semibold text-base">
+                  {isSignUp ? "Criar Conta" : "Entrar"}
+                </Text>
+              )}
             </TouchableOpacity>
 
             {/* Toggle Signup/Login */}
@@ -153,34 +183,20 @@ export default function LoginScreen() {
               onPress={() => {
                 setIsSignUp(!isSignUp);
                 setError(null);
+                setName("");
+                setEmail("");
+                setPassword("");
               }}
               disabled={isLoading}
             >
               <Text className="text-center text-muted text-sm">
                 {isSignUp ? "Já tem conta? " : "Não tem conta? "}
-                <Text className="text-primary font-semibold">
+                <Text style={{ color: colors.primary }} className="font-semibold">
                   {isSignUp ? "Entrar" : "Cadastrar"}
                 </Text>
               </Text>
             </TouchableOpacity>
           </View>
-
-          {/* Divider */}
-          <View className="flex-row items-center gap-3 my-2">
-            <View className="flex-1 h-px bg-border" />
-            <Text className="text-muted text-xs">OU</Text>
-            <View className="flex-1 h-px bg-border" />
-          </View>
-
-          {/* Google Sign-In */}
-          <TouchableOpacity
-            className="border border-border rounded-lg py-4 items-center flex-row justify-center gap-2 active:opacity-80"
-            onPress={handleGoogleSignIn}
-            disabled={isLoading}
-          >
-            <Text className="text-2xl">🔵</Text>
-            <Text className="text-foreground font-semibold">Continuar com Google</Text>
-          </TouchableOpacity>
 
           {/* Footer */}
           <View className="items-center gap-2">
