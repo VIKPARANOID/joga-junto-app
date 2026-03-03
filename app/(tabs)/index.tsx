@@ -1,10 +1,12 @@
-import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/use-auth";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { LoadingScreen } from "@/components/loading-spinner";
 import { ErrorScreen } from "@/components/error-screen";
+import { useEffect } from "react";
+import { useColors } from "@/hooks/use-colors";
+import * as Haptics from "expo-haptics";
 
 /**
  * Home Screen - Redirecionamento para Atleta ou Clube
@@ -14,6 +16,7 @@ import { ErrorScreen } from "@/components/error-screen";
  */
 export default function HomeScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { user, loading, isAuthenticated, error, refresh } = useAuth();
 
   useEffect(() => {
@@ -65,74 +68,116 @@ export default function HomeScreen() {
 
   // Se não estiver autenticado, mostrar tela de boas-vindas
   return (
-    <ScreenContainer className="p-6">
+    <ScreenContainer className="p-6 bg-background">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1">
-        <View className="flex-1 justify-center items-center gap-8">
-          {/* Hero */}
-          <View className="items-center gap-4">
-            <Text className="text-6xl">⚽</Text>
-            <View className="items-center gap-2">
-              <Text className="text-3xl font-bold text-foreground text-center">
+        <View className="flex-1 justify-between py-8">
+          {/* Hero Section */}
+          <View className="items-center gap-6">
+            {/* Logo */}
+            <View 
+              className="w-24 h-24 rounded-full items-center justify-center mb-4"
+              style={{ backgroundColor: colors.primary }}
+            >
+              <Text className="text-6xl">⚽</Text>
+            </View>
+
+            {/* Title */}
+            <View className="items-center gap-3">
+              <Text className="text-4xl font-bold text-foreground text-center">
                 Joga Junto
               </Text>
-              <Text className="text-base text-muted text-center max-w-xs">
+              <Text className="text-base text-muted text-center max-w-xs leading-relaxed">
                 Análise de desempenho de atletas com Inteligência Artificial
               </Text>
             </View>
           </View>
 
-          {/* Features */}
-          <View className="w-full gap-3">
-            <View className="flex-row items-start gap-3">
-              <Text className="text-2xl">🎯</Text>
+          {/* Features Cards */}
+          <View className="w-full gap-3 my-8">
+            {/* Atletas */}
+            <View 
+              className="flex-row items-start gap-4 p-4 rounded-xl border"
+              style={{ 
+                backgroundColor: colors.surface,
+                borderColor: colors.border 
+              }}
+            >
+              <Text className="text-3xl">🎯</Text>
               <View className="flex-1">
-                <Text className="font-semibold text-foreground">Para Atletas</Text>
-                <Text className="text-sm text-muted">
-                  Envie vídeos e receba análise de desempenho
+                <Text className="font-bold text-foreground text-base">Para Atletas</Text>
+                <Text className="text-sm text-muted leading-relaxed">
+                  Envie vídeos curtos e receba análise detalhada de desempenho
                 </Text>
               </View>
             </View>
 
-            <View className="flex-row items-start gap-3">
-              <Text className="text-2xl">👁️</Text>
+            {/* Olheiros */}
+            <View 
+              className="flex-row items-start gap-4 p-4 rounded-xl border"
+              style={{ 
+                backgroundColor: colors.surface,
+                borderColor: colors.border 
+              }}
+            >
+              <Text className="text-3xl">👁️</Text>
               <View className="flex-1">
-                <Text className="font-semibold text-foreground">Para Olheiros</Text>
-                <Text className="text-sm text-muted">
-                  Descubra talentos com dados de desempenho
+                <Text className="font-bold text-foreground text-base">Para Olheiros</Text>
+                <Text className="text-sm text-muted leading-relaxed">
+                  Descubra talentos com dados reais de desempenho
                 </Text>
               </View>
             </View>
 
-            <View className="flex-row items-start gap-3">
-              <Text className="text-2xl">📊</Text>
+            {/* Métricas */}
+            <View 
+              className="flex-row items-start gap-4 p-4 rounded-xl border"
+              style={{ 
+                backgroundColor: colors.surface,
+                borderColor: colors.border 
+              }}
+            >
+              <Text className="text-3xl">📊</Text>
               <View className="flex-1">
-                <Text className="font-semibold text-foreground">Métricas IA</Text>
-                <Text className="text-sm text-muted">
-                  Velocidade, agilidade, intensidade e mais
+                <Text className="font-bold text-foreground text-base">Métricas IA</Text>
+                <Text className="text-sm text-muted leading-relaxed">
+                  Velocidade, agilidade, intensidade e muito mais
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* CTA Buttons */}
-          <View className="w-full gap-3 mt-4">
+          {/* CTA Section */}
+          <View className="w-full gap-4">
+            {/* Primary Button */}
             <Pressable
-              onPress={() => router.push("/auth/login")}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/auth/login");
+              }}
               style={({ pressed }) => [
                 {
-                  backgroundColor: "#0a7ea4",
-                  opacity: pressed ? 0.8 : 1,
+                  backgroundColor: colors.primary,
+                  opacity: pressed ? 0.85 : 1,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
                 },
               ]}
               className="py-4 px-6 rounded-lg items-center"
             >
-              <Text className="text-white font-semibold text-base">
+              <Text className="text-white font-bold text-base">
                 Entrar / Cadastrar
               </Text>
             </Pressable>
 
-            <Text className="text-xs text-muted text-center mt-2">
-              Faça login ou crie sua conta para começar
+            {/* Helper Text */}
+            <Text className="text-xs text-muted text-center leading-relaxed">
+              Faça login com sua conta ou crie uma nova para começar
+            </Text>
+          </View>
+
+          {/* Footer */}
+          <View className="items-center gap-1 mt-4">
+            <Text className="text-xs text-muted">
+              Desenvolvido com ❤️ para o futebol
             </Text>
           </View>
         </View>

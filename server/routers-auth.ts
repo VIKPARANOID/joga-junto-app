@@ -32,7 +32,7 @@ export const authRouter = router({
       // Validar email
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(input.email)) {
-        throw new Error("Email inválido");
+        throw new Error("Email invalido");
       }
 
       // Verificar se email já existe
