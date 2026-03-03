@@ -19,8 +19,8 @@ export default function HomeScreen() {
   useEffect(() => {
     // Só redirecionar se estiver autenticado
     if (!loading && isAuthenticated && user) {
-      console.log("[HomeScreen] User authenticated, redirecting to athlete profile");
-      router.replace("/athlete/profile");
+      console.log("[HomeScreen] User authenticated, redirecting to user type selection");
+      router.replace("/user-type-selection");
     }
   }, [user, loading, isAuthenticated, router]);
 
@@ -63,7 +63,7 @@ export default function HomeScreen() {
     );
   }
 
-  // Se não estiver autenticado, mostrar tela de login
+  // Se não estiver autenticado, mostrar tela de boas-vindas
   return (
     <ScreenContainer className="p-6">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1">
@@ -117,7 +117,7 @@ export default function HomeScreen() {
           {/* CTA Buttons */}
           <View className="w-full gap-3 mt-4">
             <Pressable
-              onPress={() => router.push("/user-type-selection")}
+              onPress={() => router.push("/auth/login")}
               style={({ pressed }) => [
                 {
                   backgroundColor: "#0a7ea4",
@@ -127,12 +127,12 @@ export default function HomeScreen() {
               className="py-4 px-6 rounded-lg items-center"
             >
               <Text className="text-white font-semibold text-base">
-                Começar
+                Entrar / Cadastrar
               </Text>
             </Pressable>
 
             <Text className="text-xs text-muted text-center mt-2">
-              Você será redirecionado para login/cadastro
+              Faça login ou crie sua conta para começar
             </Text>
           </View>
         </View>

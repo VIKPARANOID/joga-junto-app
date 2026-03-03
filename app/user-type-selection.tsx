@@ -21,7 +21,7 @@ export default function UserTypeSelectionScreen() {
 
       await createAthleteMutation.mutateAsync({});
 
-      router.replace("/(tabs)");
+      router.replace("/athlete/profile");
     } catch (error) {
       console.error("Error creating athlete profile:", error);
       setSelectedType(null);
@@ -39,6 +39,8 @@ export default function UserTypeSelectionScreen() {
         clubName: "Meu Clube",
       });
 
+      // Redirecionar para dashboard do clube (web)
+      // Por enquanto, redirecionar para home
       router.replace("/(tabs)");
     } catch (error) {
       console.error("Error creating club profile:", error);
