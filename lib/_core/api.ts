@@ -133,10 +133,13 @@ export async function getMe(): Promise<{
   lastSignedIn: string;
 } | null> {
   try {
+    console.log("[API] getMe: calling /api/auth/me");
     const result = await apiCall<{ user: any }>("/api/auth/me");
+    console.log("[API] getMe success:", result);
     return result.user || null;
   } catch (error) {
-    console.error("[API] getMe failed:", error);
+    // Expected if not logged in - return null instead of throwing
+    console.log("[API] getMe: user not authenticated (expected)");
     return null;
   }
 }

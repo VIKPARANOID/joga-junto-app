@@ -76,7 +76,7 @@ export function useAuth(options?: UseAuthOptions) {
       setUser(null);
     } finally {
       setLoading(false);
-      console.log("[useAuth] fetchUser completed, loading:", false);
+      console.log("[useAuth] fetchUser completed, loading: false");
     }
   }, []);
 
@@ -98,14 +98,25 @@ export function useAuth(options?: UseAuthOptions) {
 
   useEffect(() => {
     console.log("[useAuth] useEffect triggered, autoFetch:", autoFetch, "platform:", Platform.OS);
-    if (autoFetch) {
-      if (Platform.OS === "web") {
-        // Web: fetch user from API directly (user will login manually if needed)
-        console.log("[useAuth] Web: fetching user from API...");
-        fetchUser();
-      } else {
-        // Native: check for cached user info first for faster initial load
-        Auth.getUserInfo().then((cachedUser) => {
+    
+    if (!autoFetch) {
+      console.log("[useAuth] autoFetch disabled, setting loading to false");
+      setLoading(false);
+      return;
+    }
+
+    if (Platform.OS === "web") {
+      // Web: fetch user from API directly (user will login manually if needed)
+      console.log("[useAuth] Web: fetching user from API...");
+      fetchUser().catch((err) => {
+        console.error("[useAuth] fetchUser error caught:", err);
+        // Ensure loading is set to false even if error occurs
+        setLoading(false);
+      });
+    } else {
+      // Native: check for cached user info first for faster initial load
+      Auth.getUserInfo()
+        .then((cachedUser) => {
           console.log("[useAuth] Native cached user check:", cachedUser);
           if (cachedUser) {
             console.log("[useAuth] Native: setting cached user immediately");
@@ -113,13 +124,17 @@ export function useAuth(options?: UseAuthOptions) {
             setLoading(false);
           } else {
             // No cached user, check session token
-            fetchUser();
+            console.log("[useAuth] No cached user, calling fetchUser");
+            fetchUser().catch((err) => {
+              console.error("[useAuth] fetchUser error caught:", err);
+              setLoading(false);
+            });
           }
+        })
+        .catch((err) => {
+          console.error("[useAuth] getUserInfo error:", err);
+          setLoading(false);
         });
-      }
-    } else {
-      console.log("[useAuth] autoFetch disabled, setting loading to false");
-      setLoading(false);
     }
   }, [autoFetch, fetchUser]);
 
