@@ -14,6 +14,7 @@ import { eq } from "drizzle-orm";
  * - name: Nome do usuário
  */
 export const authRouter = router({
+
   /**
    * Signup com email e senha
    */
