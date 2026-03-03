@@ -18,22 +18,45 @@ export default function AthleteProfileScreen() {
   const feet = ["Destro", "Canhoto", "Ambidestro"];
 
   const handleSaveProfile = async () => {
-    // Validações
-    if (!height || !weight || !position || !preferredFoot) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos");
+    // CRÍTICO: Validação de altura (necessária para calibração de IA)
+    if (!height || height.trim() === "") {
+      Alert.alert("Erro", "Altura é obrigatória para calibração da IA");
       return;
     }
 
     const heightNum = parseFloat(height);
-    const weightNum = parseFloat(weight);
-
-    if (heightNum < 140 || heightNum > 220) {
-      Alert.alert("Erro", "Altura deve estar entre 140 e 220 cm");
+    if (isNaN(heightNum)) {
+      Alert.alert("Erro", "Altura deve ser um número válido");
       return;
     }
 
-    if (weightNum < 40 || weightNum > 150) {
-      Alert.alert("Erro", "Peso deve estar entre 40 e 150 kg");
+    if (heightNum < 100 || heightNum > 250) {
+      Alert.alert("Erro", "Altura deve estar entre 100cm e 250cm");
+      return;
+    }
+
+    // Validação de peso (opcional mas recomendado)
+    let weightNum: number | undefined;
+    if (weight && weight.trim() !== "") {
+      weightNum = parseFloat(weight);
+      if (isNaN(weightNum)) {
+        Alert.alert("Erro", "Peso deve ser um número válido");
+        return;
+      }
+      if (weightNum < 30 || weightNum > 200) {
+        Alert.alert("Erro", "Peso deve estar entre 30kg e 200kg");
+        return;
+      }
+    }
+
+    // Validação de posição e perna
+    if (!position || position.trim() === "") {
+      Alert.alert("Erro", "Posição é obrigatória");
+      return;
+    }
+
+    if (!preferredFoot || preferredFoot.trim() === "") {
+      Alert.alert("Erro", "Perna dominante é obrigatória");
       return;
     }
 
@@ -49,8 +72,8 @@ export default function AthleteProfileScreen() {
 
       Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
     } catch (error) {
-      Alert.alert("Erro", "Falha ao atualizar perfil");
-      console.error(error);
+      console.error("Profile update error:", error);
+      Alert.alert("Erro", "Falha ao atualizar perfil. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -73,25 +96,26 @@ export default function AthleteProfileScreen() {
             Dados Biométricos
           </Text>
 
-          {/* Altura */}
+          {/* Altura - OBRIGATÓRIO */}
           <View className="mb-4">
             <Text className="text-sm font-medium text-foreground mb-2">
-              Altura (cm) *
+              Altura (cm) <Text className="text-error">*</Text>
             </Text>
             <TextInput
               value={height}
               onChangeText={setHeight}
               placeholder="175"
               keyboardType="decimal-pad"
+              editable={!loading}
               className="border border-border rounded-lg px-4 py-3 text-foreground bg-white"
               placeholderTextColor="#999"
             />
             <Text className="text-xs text-muted mt-1">
-              Essencial para calibração da IA
+              Essencial para calibração da IA (100-250cm)
             </Text>
           </View>
 
-          {/* Peso */}
+          {/* Peso - Opcional */}
           <View className="mb-4">
             <Text className="text-sm font-medium text-foreground mb-2">
               Peso (kg)
@@ -99,102 +123,95 @@ export default function AthleteProfileScreen() {
             <TextInput
               value={weight}
               onChangeText={setWeight}
-              placeholder="75"
+              placeholder="70"
               keyboardType="decimal-pad"
+              editable={!loading}
               className="border border-border rounded-lg px-4 py-3 text-foreground bg-white"
               placeholderTextColor="#999"
             />
+            <Text className="text-xs text-muted mt-1">
+              Opcional (30-200kg)
+            </Text>
           </View>
         </View>
 
-        {/* Dados de Jogo */}
+        {/* Posição */}
         <View className="mb-8">
           <Text className="text-lg font-semibold text-foreground mb-4">
-            Dados de Jogo
+            Posição <Text className="text-error">*</Text>
           </Text>
-
-          {/* Posição */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
-              Posição *
-            </Text>
-            <View className="flex-row flex-wrap gap-2">
-              {positions.map((pos) => (
-                <Pressable
-                  key={pos}
-                  onPress={() => setPosition(pos)}
-                  className={`px-4 py-2 rounded-full border ${
-                    position === pos
-                      ? "bg-primary border-primary"
-                      : "bg-surface border-border"
+          <View className="flex-row flex-wrap gap-2">
+            {positions.map((pos) => (
+              <Pressable
+                key={pos}
+                onPress={() => setPosition(pos)}
+                disabled={loading}
+                style={({ pressed }) => [
+                  {
+                    backgroundColor: position === pos ? "#0a7ea4" : "#f5f5f5",
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+                className="px-4 py-2 rounded-lg border border-border"
+              >
+                <Text
+                  className={`text-sm font-medium ${
+                    position === pos ? "text-white" : "text-foreground"
                   }`}
                 >
-                  <Text
-                    className={`font-medium ${
-                      position === pos ? "text-white" : "text-foreground"
-                    }`}
-                  >
-                    {pos}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
-          {/* Perna Dominante */}
-          <View className="mb-4">
-            <Text className="text-sm font-medium text-foreground mb-2">
-              Perna Dominante *
-            </Text>
-            <View className="flex-row gap-2">
-              {feet.map((foot) => (
-                <Pressable
-                  key={foot}
-                  onPress={() => setPreferredFoot(foot)}
-                  className={`flex-1 px-4 py-3 rounded-lg border ${
-                    preferredFoot === foot
-                      ? "bg-primary border-primary"
-                      : "bg-surface border-border"
-                  }`}
-                >
-                  <Text
-                    className={`font-medium text-center ${
-                      preferredFoot === foot ? "text-white" : "text-foreground"
-                    }`}
-                  >
-                    {foot}
-                  </Text>
-                </Pressable>
-              ))}
-            </View>
+                  {pos}
+                </Text>
+              </Pressable>
+            ))}
           </View>
         </View>
 
-        {/* Info Box */}
-        <View className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-          <Text className="text-sm text-blue-900 font-medium">
-            💡 Por que esses dados importam?
+        {/* Perna Dominante */}
+        <View className="mb-8">
+          <Text className="text-lg font-semibold text-foreground mb-4">
+            Perna Dominante <Text className="text-error">*</Text>
           </Text>
-          <Text className="text-xs text-blue-800 mt-2 leading-relaxed">
-            A altura é essencial para converter pixels em metros. A posição e perna dominante ajudam a comparar seu desempenho com atletas similares.
-          </Text>
+          <View className="flex-row gap-2">
+            {feet.map((foot) => (
+              <Pressable
+                key={foot}
+                onPress={() => setPreferredFoot(foot)}
+                disabled={loading}
+                style={({ pressed }) => [
+                  {
+                    backgroundColor: preferredFoot === foot ? "#0a7ea4" : "#f5f5f5",
+                    opacity: pressed ? 0.8 : 1,
+                  },
+                ]}
+                className="flex-1 px-4 py-2 rounded-lg border border-border items-center"
+              >
+                <Text
+                  className={`text-sm font-medium ${
+                    preferredFoot === foot ? "text-white" : "text-foreground"
+                  }`}
+                >
+                  {foot}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
-        {/* Botão Salvar */}
+        {/* Save Button */}
         <Pressable
           onPress={handleSaveProfile}
           disabled={loading}
-          className={`py-4 px-6 rounded-lg ${
-            loading ? "bg-gray-400" : "bg-primary"
-          }`}
+          style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+          className="bg-primary py-4 px-6 rounded-lg items-center mt-8"
         >
-          <Text className="text-white font-semibold text-center text-lg">
+          <Text className="text-white font-semibold text-base">
             {loading ? "Salvando..." : "Salvar Perfil"}
           </Text>
         </Pressable>
 
-        {/* Espaço */}
-        <View className="h-8" />
+        <Text className="text-xs text-muted text-center mt-4">
+          * Campos obrigatórios
+        </Text>
       </ScrollView>
     </ScreenContainer>
   );

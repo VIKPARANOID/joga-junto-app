@@ -37,7 +37,11 @@ export async function createAthlete(data: InsertAthlete): Promise<number> {
   if (!db) throw new Error("Database not available");
 
   const result = await db.insert(athletes).values(data);
-  return (result as any).insertId || 0;
+  const insertId = (result as any).insertId;
+  if (!insertId || insertId === 0) {
+    throw new Error("Falha ao criar atleta: insertId invalido");
+  }
+  return insertId;
 }
 
 export async function updateAthlete(userId: number, data: Partial<InsertAthlete>): Promise<void> {
@@ -64,7 +68,11 @@ export async function createClub(data: InsertClub): Promise<number> {
   if (!db) throw new Error("Database not available");
 
   const result = await db.insert(clubs).values(data);
-  return (result as any).insertId || 0;
+  const insertId = (result as any).insertId;
+  if (!insertId || insertId === 0) {
+    throw new Error("Falha ao criar clube: insertId invalido");
+  }
+  return insertId;
 }
 
 export async function updateClub(userId: number, data: Partial<InsertClub>): Promise<void> {

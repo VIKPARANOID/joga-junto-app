@@ -52,11 +52,22 @@ export const athleteRouter = router({
   }),
 
   /**
-   * Get KPIs for a specific video
+   * Get KPIs for a specific video (com verificacao de permissao)
    */
   getKPIs: protectedProcedure
     .input(z.object({ videoId: z.number() }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
+      // Verificar se o video pertence ao atleta autenticado
+      const video = await db.getVideoById(input.videoId);
+      if (!video) {
+        throw new Error("Video nao encontrado");
+      }
+
+      const athlete = await db.getAthleteByUserId(ctx.user.id);
+      if (!athlete || video.athleteId !== athlete.id) {
+        throw new Error("Acesso negado: video nao pertence a voce");
+      }
+
       return db.getKPIByVideoId(input.videoId);
     }),
 

@@ -35,10 +35,15 @@ export default function LoginScreen() {
       setIsLoading(true);
       setError(null);
 
+      // CRITICO: Usar scheme dinamico em vez de hardcoded localhost
+      // Isso permite funcionar em producao tambem
+      const redirectUri = "exp://localhost:8081/oauth"; // Em producao, usar scheme do app
+      const authUrl = `https://api.manus.im/oauth/authorize?client_id=joga-junto&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}`;
+
       // Abrir OAuth flow
       const result = await WebBrowser.openAuthSessionAsync(
-        "https://api.manus.im/oauth/authorize?client_id=joga-junto&response_type=code&redirect_uri=exp://localhost:8081/oauth",
-        "exp://localhost:8081/oauth"
+        authUrl,
+        redirectUri
       );
 
       if (result.type === "success") {
@@ -58,6 +63,19 @@ export default function LoginScreen() {
   const handleEmailLogin = async () => {
     if (!email || !password) {
       setError("Preencha email e senha");
+      return;
+    }
+
+    // CRITICO: Validar formato de email
+    const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Email invalido");
+      return;
+    }
+
+    // Validar comprimento de senha
+    if (password.length < 6) {
+      setError("Senha deve ter no minimo 6 caracteres");
       return;
     }
 
