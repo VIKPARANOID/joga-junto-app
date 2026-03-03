@@ -359,3 +359,31 @@
 - [x] Medir tempo de scroll
 - [x] Contar imagens carregadas vs não carregadas
 - [x] Rastrear erros de carregamento
+
+
+## Fase 11: Infinite Scroll e Paginação
+
+### Infinite Scroll
+- [x] Criar hook useInfiniteScroll com Intersection Observer
+- [x] Implementar trigger ao final da página
+- [x] Carregar próxima página automaticamente
+- [x] Mostrar loading indicator
+- [x] Tratamento de erro com retry
+
+### Paginação no Backend
+- [ ] Adicionar suporte a limit/offset no endpoint listAthletes
+- [ ] Retornar total de atletas
+- [ ] Retornar hasMore flag
+- [ ] Otimizar queries com paginação
+
+### Integração no Dashboard
+- [x] Aplicar infinite scroll na grid de atletas
+- [x] Mostrar skeleton loading enquanto carrega
+- [x] Botão de retry em caso de erro
+- [x] Indicador de "fim da lista"
+
+### Performance
+- [x] Debounce de requisições
+- [x] Cache de páginas anteriores
+- [x] Preload de próxima página
+- [x] Limpar dados antigos se necessário
