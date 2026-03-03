@@ -92,11 +92,22 @@ export default function HomeScreen() {
             </Pressable>
           </View>
 
-          {/* Features */}
-          <View className="gap-4 mt-4">
-            <Text className="text-lg font-bold text-foreground">
-              ✨ Funcionalidades
+           {/* Botão de Leaderboard */}
+          <Pressable
+            onPress={() => router.push("/leaderboard")}
+            style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 gap-2"
+          >
+            <Text className="text-2xl">🏆</Text>
+            <Text className="text-lg font-bold text-white">Ranking Global</Text>
+            <Text className="text-sm text-white opacity-90">
+              Veja sua posição e compita com outros atletas
             </Text>
+          </Pressable>
+
+          {/* Funcionalidades */}
+          <View className="gap-4">
+            <Text className="text-xl font-bold text-foreground">✨ Funcionalidades</Text>
 
             <View className="gap-3">
               <FeatureItem

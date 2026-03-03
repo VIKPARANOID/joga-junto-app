@@ -91,6 +91,10 @@ export default function RootLayout() {
             <Stack.Screen name="athlete-public" />
             <Stack.Screen name="demo-athlete" />
             <Stack.Screen name="demo-scout" />
+            <Stack.Screen name="class-selection" />
+            <Stack.Screen name="rpg-profile" />
+            <Stack.Screen name="avatar-customization" />
+            <Stack.Screen name="leaderboard" />
           </Stack>
           <StatusBar style="auto" />
         </QueryClientProvider>
