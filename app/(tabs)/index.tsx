@@ -1,187 +1,168 @@
-import { useRouter } from "expo-router";
-import { useAuth } from "@/hooks/use-auth";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { ScrollView, Text, View, Pressable } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { LoadingScreen } from "@/components/loading-spinner";
-import { ErrorScreen } from "@/components/error-screen";
-import { useEffect } from "react";
 import { useColors } from "@/hooks/use-colors";
+import { useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 
-/**
- * Home Screen - Redirecionamento para Atleta ou Clube
- *
- * Esta tela verifica o tipo de usuário e redireciona para a área apropriada.
- * Se não estiver autenticado, mostra opções de login/cadastro.
- */
 export default function HomeScreen() {
-  const router = useRouter();
   const colors = useColors();
-  const { user, loading, isAuthenticated, error, refresh } = useAuth();
+  const router = useRouter();
 
-  useEffect(() => {
-    // Só redirecionar se estiver autenticado
-    if (!loading && isAuthenticated && user) {
-      console.log("[HomeScreen] User authenticated, redirecting to user type selection");
-      router.replace("/user-type-selection");
-    }
-  }, [user, loading, isAuthenticated, router]);
+  const handleAthleteDemo = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/demo-athlete");
+  };
 
-  // Mostrar loading enquanto verifica autenticação
-  if (loading) {
-    return (
-      <ScreenContainer className="items-center justify-center">
-        <LoadingScreen
-          message="Verificando autenticação..."
-          subMessage="Aguarde um momento"
-        />
-      </ScreenContainer>
-    );
-  }
+  const handleScoutDemo = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/demo-scout");
+  };
 
-  // Mostrar erro se houver
-  if (error && !isAuthenticated) {
-    return (
-      <ScreenContainer className="items-center justify-center">
-        <ErrorScreen
-          title="Erro de Conexão"
-          message="Não conseguimos verificar sua sessão. Tente novamente."
-          errorCode={error.message}
-          onRetry={() => refresh()}
-          showRetry={true}
-        />
-      </ScreenContainer>
-    );
-  }
-
-  // Se estiver autenticado, mostrar loading enquanto redireciona
-  if (isAuthenticated) {
-    return (
-      <ScreenContainer className="items-center justify-center">
-        <LoadingScreen
-          message="Redirecionando..."
-          subMessage="Carregando seu perfil"
-        />
-      </ScreenContainer>
-    );
-  }
-
-  // Se não estiver autenticado, mostrar tela de boas-vindas
   return (
-    <ScreenContainer className="p-6 bg-background">
+    <ScreenContainer className="bg-background">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} className="flex-1">
-        <View className="flex-1 justify-between py-8">
-          {/* Hero Section */}
-          <View className="items-center gap-6">
-            {/* Logo */}
-            <View 
-              className="w-24 h-24 rounded-full items-center justify-center mb-4"
-              style={{ backgroundColor: colors.primary }}
-            >
-              <Text className="text-6xl">⚽</Text>
-            </View>
-
-            {/* Title */}
-            <View className="items-center gap-3">
-              <Text className="text-4xl font-bold text-foreground text-center">
-                Joga Junto
-              </Text>
-              <Text className="text-base text-muted text-center max-w-xs leading-relaxed">
-                Análise de desempenho de atletas com Inteligência Artificial
-              </Text>
-            </View>
-          </View>
-
-          {/* Features Cards */}
-          <View className="w-full gap-3 my-8">
-            {/* Atletas */}
-            <View 
-              className="flex-row items-start gap-4 p-4 rounded-xl border"
-              style={{ 
-                backgroundColor: colors.surface,
-                borderColor: colors.border 
-              }}
-            >
-              <Text className="text-3xl">🎯</Text>
-              <View className="flex-1">
-                <Text className="font-bold text-foreground text-base">Para Atletas</Text>
-                <Text className="text-sm text-muted leading-relaxed">
-                  Envie vídeos curtos e receba análise detalhada de desempenho
-                </Text>
-              </View>
-            </View>
-
-            {/* Olheiros */}
-            <View 
-              className="flex-row items-start gap-4 p-4 rounded-xl border"
-              style={{ 
-                backgroundColor: colors.surface,
-                borderColor: colors.border 
-              }}
-            >
-              <Text className="text-3xl">👁️</Text>
-              <View className="flex-1">
-                <Text className="font-bold text-foreground text-base">Para Olheiros</Text>
-                <Text className="text-sm text-muted leading-relaxed">
-                  Descubra talentos com dados reais de desempenho
-                </Text>
-              </View>
-            </View>
-
-            {/* Métricas */}
-            <View 
-              className="flex-row items-start gap-4 p-4 rounded-xl border"
-              style={{ 
-                backgroundColor: colors.surface,
-                borderColor: colors.border 
-              }}
-            >
-              <Text className="text-3xl">📊</Text>
-              <View className="flex-1">
-                <Text className="font-bold text-foreground text-base">Métricas IA</Text>
-                <Text className="text-sm text-muted leading-relaxed">
-                  Velocidade, agilidade, intensidade e muito mais
-                </Text>
-              </View>
-            </View>
-          </View>
-
-          {/* CTA Section */}
-          <View className="w-full gap-4">
-            {/* Primary Button */}
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/auth/login");
-              }}
-              style={({ pressed }) => [
-                {
-                  backgroundColor: colors.primary,
-                  opacity: pressed ? 0.85 : 1,
-                  transform: [{ scale: pressed ? 0.98 : 1 }],
-                },
-              ]}
-              className="py-4 px-6 rounded-lg items-center"
-            >
-              <Text className="text-white font-bold text-base">
-                Entrar / Cadastrar
-              </Text>
-            </Pressable>
-
-            {/* Helper Text */}
-            <Text className="text-xs text-muted text-center leading-relaxed">
-              Faça login com sua conta ou crie uma nova para começar
+        <View className="flex-1 justify-center p-6 gap-8">
+          {/* Logo & Header */}
+          <View className="items-center gap-4">
+            <Text className="text-6xl">⚽</Text>
+            <Text className="text-4xl font-bold text-foreground text-center">
+              Joga Junto
+            </Text>
+            <Text className="text-base text-muted text-center">
+              Análise de desempenho de atletas com Inteligência Artificial
             </Text>
           </View>
 
+          {/* Demo Cards */}
+          <View className="gap-4">
+            {/* Athlete Demo */}
+            <Pressable
+              onPress={handleAthleteDemo}
+              style={({ pressed }) => [
+                {
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                  backgroundColor: colors.primary,
+                },
+              ]}
+              className="rounded-2xl p-6 gap-3"
+            >
+              <View className="flex-row items-center gap-3">
+                <Text className="text-4xl">🏃</Text>
+                <View className="flex-1">
+                  <Text className="text-xl font-bold text-white">
+                    Demo do Atleta
+                  </Text>
+                  <Text className="text-sm text-white opacity-80">
+                    Envie vídeos e receba análise
+                  </Text>
+                </View>
+              </View>
+              <Text className="text-xs text-white opacity-70 mt-2">
+                Veja como funciona o upload de vídeo e análise de KPIs
+              </Text>
+            </Pressable>
+
+            {/* Scout Demo */}
+            <Pressable
+              onPress={handleScoutDemo}
+              style={({ pressed }) => [
+                {
+                  opacity: pressed ? 0.8 : 1,
+                  transform: [{ scale: pressed ? 0.97 : 1 }],
+                  backgroundColor: colors.success,
+                },
+              ]}
+              className="rounded-2xl p-6 gap-3"
+            >
+              <View className="flex-row items-center gap-3">
+                <Text className="text-4xl">👁️</Text>
+                <View className="flex-1">
+                  <Text className="text-xl font-bold text-white">
+                    Demo do Olheiro
+                  </Text>
+                  <Text className="text-sm text-white opacity-80">
+                    Descubra talentos com dados
+                  </Text>
+                </View>
+              </View>
+              <Text className="text-xs text-white opacity-70 mt-2">
+                Explore o dashboard com filtros e ranking de atletas
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* Features */}
+          <View className="gap-4 mt-4">
+            <Text className="text-lg font-bold text-foreground">
+              ✨ Funcionalidades
+            </Text>
+
+            <View className="gap-3">
+              <FeatureItem
+                icon="📹"
+                title="Upload de Vídeo"
+                description="Grave treinos e receba análise automática"
+                color={colors.primary}
+              />
+              <FeatureItem
+                icon="📊"
+                title="KPIs de Desempenho"
+                description="Velocidade, agilidade, intensidade e mais"
+                color={colors.success}
+              />
+              <FeatureItem
+                icon="🔍"
+                title="Dashboard de Olheiros"
+                description="Filtros avançados e ranking de atletas"
+                color={colors.warning}
+              />
+              <FeatureItem
+                icon="🤖"
+                title="IA & Visão Computacional"
+                description="MediaPipe para análise de movimento"
+                color={colors.error}
+              />
+            </View>
+          </View>
+
           {/* Footer */}
-          <View className="items-center gap-1 mt-4">
+          <View className="items-center gap-2 mt-8">
             <Text className="text-xs text-muted">
-              Desenvolvido com ❤️ para o futebol
+              MVP - Versão de Demonstração
+            </Text>
+            <Text className="text-xs text-muted">
+              Todos os dados são simulados
             </Text>
           </View>
         </View>
       </ScrollView>
     </ScreenContainer>
+  );
+}
+
+function FeatureItem({
+  icon,
+  title,
+  description,
+  color,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  color: string;
+}) {
+  const colors = useColors();
+  return (
+    <View
+      className="flex-row gap-3 p-3 rounded-lg"
+      style={{ backgroundColor: color + "20", borderLeftColor: color, borderLeftWidth: 3 }}
+    >
+      <Text className="text-2xl">{icon}</Text>
+      <View className="flex-1">
+        <Text className="font-semibold text-foreground text-sm">{title}</Text>
+        <Text className="text-xs text-muted mt-1">{description}</Text>
+      </View>
+    </View>
   );
 }

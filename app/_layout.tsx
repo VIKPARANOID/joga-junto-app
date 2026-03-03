@@ -89,7 +89,8 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="athlete" />
             <Stack.Screen name="athlete-public" />
-            <Stack.Screen name="oauth/callback" />
+            <Stack.Screen name="demo-athlete" />
+            <Stack.Screen name="demo-scout" />
           </Stack>
           <StatusBar style="auto" />
         </QueryClientProvider>
